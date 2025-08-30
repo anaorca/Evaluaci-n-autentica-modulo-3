@@ -20,15 +20,11 @@
             box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
             outline: none;
         }
-        /* Estilos para asegurar la captura del PDF */
-        .pdf-export-content, .pdf-export-content * {
-            box-sizing: border-box;
-        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div id="content-to-export" class="container mx-auto p-4 md:p-8 max-w-4xl pdf-export-content">
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
         <!-- Header -->
         <header class="text-center mb-10">
             <h1 class="text-3xl md:text-4xl font-bold text-teal-800">Ejercicio de Análisis: "Auditoría de una Tarea"</h1>
@@ -38,7 +34,7 @@
         <!-- Task Description -->
         <div class="bg-white p-6 rounded-2xl shadow-lg border border-blue-200 mb-8">
             <h2 class="text-xl font-bold text-blue-800 mb-4">Tarea a Analizar: "Ensayo Final para Sociología del Arte"</h2>
-            <p class="text-gray-700 leading-relaxed">
+            <p id="task-description" class="text-gray-700 leading-relaxed">
                 Al final del semestre, los estudiantes deben entregar un ensayo de 2,500 palabras. Deben elegir una de
                 tres preguntas predefinidas por el profesor. El ensayo debe analizar una obra de arte específica utilizando
                 dos de las teorías sociológicas vistas en clase. Se espera que los estudiantes utilicen un mínimo de 8
@@ -51,65 +47,111 @@
         <!-- Analysis Template -->
         <div class="bg-white p-6 rounded-2xl shadow-lg space-y-6">
             <h2 class="text-2xl font-bold text-center mb-4">Tu Análisis de las 5 Dimensiones</h2>
-
-            <div>
+            
+            <div data-label="1. Dimensión: La Tarea">
                 <label for="dim1-task" class="text-lg font-semibold text-gray-800 block mb-2">1. Dimensión: La Tarea</label>
                 <textarea id="dim1-task" class="w-full h-32 p-3 border border-gray-300 rounded-md" placeholder="Analiza aquí si la tarea es compleja, poco estructurada, si integra conocimientos, etc."></textarea>
             </div>
-
-            <div>
+            
+            <div data-label="2. Dimensión: El Contexto Físico">
                 <label for="dim2-physical" class="text-lg font-semibold text-gray-800 block mb-2">2. Dimensión: El Contexto Físico</label>
                 <textarea id="dim2-physical" class="w-full h-32 p-3 border border-gray-300 rounded-md" placeholder="Analiza el entorno, herramientas y recursos. ¿Son de alta o baja fidelidad con la realidad profesional?"></textarea>
             </div>
-
-            <div>
+            
+            <div data-label="3. Dimensión: El Contexto Social">
                 <label for="dim3-social" class="text-lg font-semibold text-gray-800 block mb-2">3. Dimensión: El Contexto Social</label>
                 <textarea id="dim3-social" class="w-full h-32 p-3 border border-gray-300 rounded-md" placeholder="Analiza las interacciones humanas. ¿Es un trabajo individual, colaborativo, con un cliente?"></textarea>
             </div>
 
-            <div>
+            <div data-label="4. Dimensión: La Forma del Producto/Evidencia">
                 <label for="dim4-product" class="text-lg font-semibold text-gray-800 block mb-2">4. Dimensión: La Forma del Producto/Evidencia</label>
                 <textarea id="dim4-product" class="w-full h-32 p-3 border border-gray-300 rounded-md" placeholder="Analiza el resultado final. ¿Es un artefacto académico o un producto con valor profesional?"></textarea>
             </div>
 
-            <div>
+            <div data-label="5. Dimensión: Los Criterios y Estándares">
                 <label for="dim5-criteria" class="text-lg font-semibold text-gray-800 block mb-2">5. Dimensión: Los Criterios y Estándares</label>
                 <textarea id="dim5-criteria" class="w-full h-32 p-3 border border-gray-300 rounded-md" placeholder="Analiza cómo se juzga la calidad. ¿Son los criterios transparentes, multidimensionales, públicos?"></textarea>
             </div>
         </div>
         
         <!-- Export Button -->
-        <div id="button-container" class="mt-8 text-center">
+        <div class="mt-8 text-center">
             <button id="export-pdf-button" class="bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-teal-700 transition-colors shadow-md">
                 Exportar Análisis a PDF
             </button>
         </div>
-
     </div>
 
     <script>
         document.getElementById('export-pdf-button').addEventListener('click', function() {
             const button = this;
-            const element = document.getElementById('content-to-export');
-            
-            // Ocultar el botón antes de la captura
-            document.getElementById('button-container').style.display = 'none';
+            button.disabled = true;
+            button.textContent = 'Generando PDF...';
 
+            // --- INICIO DE LA LÓGICA DE EXPORTACIÓN ROBUSTA ---
+
+            // 1. Recolectar todo el contenido de la página.
+            const mainTitle = document.querySelector('h1').textContent;
+            const subtitle = document.querySelector('header p').textContent;
+            const taskTitle = document.querySelector('.bg-white h2').textContent;
+            const taskDescription = document.getElementById('task-description').textContent.trim();
+            const analysisSections = Array.from(document.querySelectorAll('[data-label]'));
+            
+            // 2. Construir una cadena de HTML limpia y simple para el PDF.
+            //    Esto evita los problemas de renderizado de la página compleja.
+            let contentForPdf = `
+                <div style="font-family: Arial, sans-serif; color: #333; margin: 40px;">
+                    <h1 style="font-size: 28px; color: #004d40; text-align: center;">${mainTitle}</h1>
+                    <p style="text-align: center; color: #555; font-size: 16px; font-style: italic; margin-bottom: 30px;">${subtitle}</p>
+                    
+                    <div style="border: 1px solid #999; background-color: #f4f4f4; padding: 20px; border-radius: 5px;">
+                        <h2 style="font-size: 22px; color: #00796b; margin-top: 0;">${taskTitle}</h2>
+                        <p style="font-size: 14px; line-height: 1.5;">${taskDescription}</p>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #ccc; margin: 40px 0;">
+                    
+                    <h2 style="font-size: 24px; color: #004d40;">Tu Análisis de las 5 Dimensiones</h2>
+            `;
+
+            analysisSections.forEach(section => {
+                const label = section.dataset.label;
+                const textarea = section.querySelector('textarea');
+                // Reemplazar saltos de línea con <br> para que se conserven en el PDF.
+                const value = textarea.value.trim() ? textarea.value.replace(/\n/g, '<br>') : '[Sin respuesta]';
+                
+                contentForPdf += `
+                    <h3 style="font-size: 18px; color: #00796b; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px;">${label}</h3>
+                    <div style="font-size: 14px; line-height: 1.6; padding-top: 10px;">${value}</div>
+                `;
+            });
+
+            contentForPdf += `</div>`;
+
+            // 3. Opciones de configuración para html2pdf.
             const opt = {
-              margin:       0.5,
+              margin:       1,
               filename:     'Analisis_Auditoria_de_Tarea.pdf',
               image:        { type: 'jpeg', quality: 0.98 },
               html2canvas:  { scale: 2, useCORS: true },
               jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
-            // Generar el PDF
-            html2pdf().from(element).set(opt).save().then(function() {
-                // Mostrar el botón de nuevo después de que se complete la exportación
-                document.getElementById('button-container').style.display = 'block';
+            // 4. Generar el PDF desde la cadena de HTML limpia.
+            const worker = html2pdf().from(contentForPdf).set(opt).save();
+
+            // Reactivar el botón después de la generación.
+            worker.then(() => {
+                button.disabled = false;
+                button.textContent = 'Exportar Análisis a PDF';
+            }).catch(error => {
+                console.error("Error al generar el PDF:", error);
+                button.disabled = false;
+                button.textContent = 'Error - Intentar de Nuevo';
             });
+            
+            // --- FIN DE LA LÓGICA DE EXPORTACIÓN ---
         });
     </script>
 </body>
 </html>
-
